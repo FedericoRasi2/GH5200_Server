@@ -1,19 +1,31 @@
-import os
-import http.server
-import socketserver
+import socket
+import threading
 
-from http import HTTPStatus
+# Funzione per gestire la connessione in entrata
+def handle_connection(client_socket):
+    try:
+        while True:
+            data = client_socket.recv(1024)
+            if not data:
+                break
+    finally:
+        client_socket.close()
 
+# Funzione per avviare il server
+def start_server(listen_ip, listen_port):
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind((listen_ip, listen_port))
+    server_socket.listen(5)
+    while True:
+        client_socket, addr = server_socket.accept()
+        # Visualizza lo stato della connessione sulla finestra grafica
+        # Avvia il thread per gestire la connessione
+        connection_thread = threading.Thread(target=handle_connection, args=(client_socket,))
+        connection_thread.start()
 
-class Handler(http.server.SimpleHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(HTTPStatus.OK)
-        self.end_headers()
-        msg = 'Hello! you requested %s' % (self.path)
-        self.wfile.write(msg.encode())
+# Funzione per avviare il server in un thread separato
+def start_server_thread():
+    start_server("0.0.0.0", 56798)
 
-
-port = int(os.getenv('PORT', 80))
-print('Listening on port %s' % (port))
-httpd = socketserver.TCPServer(('', port), Handler)
-httpd.serve_forever()
+server_thread = threading.Thread(target=start_server_thread)
+server_thread.start()
