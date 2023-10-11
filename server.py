@@ -87,7 +87,7 @@ def start_server_tigger():
 			conn.settimeout(20) #connection timeout, change this value to close the socket if no DATA is received for X amount of seconds
 			with conn:
 				print(f"// {time_stamper()} // Connected by {addr}")
-				device_imei = "default_IMEI"
+				device_imei = "352016702580192"
 				while True:
 					try:
 						data = conn.recv(1280)
