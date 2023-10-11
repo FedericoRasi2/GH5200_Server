@@ -1,45 +1,28 @@
 import socket
-import binascii
 
-def decodethis(data):
-    codec = int(data[16:18], 16)
-    if (codec == 8):
-        lenght = int(data[8:16], 16)
-        record = int(data[18:20], 16)
-        timestamp = int(data[20:36], 16)
-        priority = int(data[36:38], 16)
-        lon = int(data[38:46], 16)
-        lat = int(data[46:54], 16)
-        alt = int(data[54:58], 16)
-        angle = int(data[58:62], 16)
-        sats = int(data[62:64], 16) #maybe
-        speed = int(data[64:68], 16)
-        print("Record: " + str(record) + "\nTimestamp: " + str(timestamp) + "\nLat,Lon: " + str(lat) + ", " + str(lon) + "\nAltitude: " + str(alt) + "\nSats: " +  str(sats) + "\nSpeed: " + str(speed) + "\n")
-        return "0000" + str(record).zfill(4)
+# Configura l'indirizzo IP e la porta del tuo server
+HOST = '0.0.0.0'  # Puoi utilizzare '0.0.0.0' per ascoltare su tutte le interfacce di rete
+PORT = 12345  # Sostituisci con la porta desiderata
 
-port = 8080
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind(('0.0.0.0', port))
-s.listen(1)
-conn, addr = s.accept()
-print('Connected by ', addr)
-imei = conn.recv(1024)
-try:
-    message = '\x01'
-    message = message.encode('utf-8')
-    conn.send(message)
-except:
-    print("Errore nell'invio della risposta. Magari non è il nostro device?")
+# Byte di risposta per accettare i dati
+response_byte = b'\x01'  # Cambia il byte di risposta se necessario
 
-while True:
-    try:
-        data = conn.recv(1024)
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
+    server_socket.bind((HOST, PORT))
+    server_socket.listen()
+    print(f"In ascolto su {HOST}:{PORT}")
+    
+    # Accetta le connessioni in entrata
+    conn, addr = server_socket.accept()
+    with conn:
+        print(f"Connesso a {addr}")
+        
+        # Ricevi i dati dal tracker
+        data = conn.recv(1024)  # Modifica la dimensione del buffer se necessario
         if not data:
-            break
-        recieved = binascii.hexlify(data)
-        print(recieved)
-        record = decodethis(recieved).encode('utf-8')
-        conn.send(record)
-    except socket.error:
-        print("Error Occured.")
-        break
+            print("Nessun dato ricevuto")
+        else:
+            print(f"Dati ricevuti: {data}")
+            # Invia il byte di risposta
+            conn.sendall(response_byte)
+            print("Byte di risposta inviato")
