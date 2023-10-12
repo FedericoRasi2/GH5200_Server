@@ -8,8 +8,30 @@ import decimal
 HOST = socket.gethostbyname(socket.gethostname())  #function may not work in Linux systems, change to string with IP adress example: "192.168.0.1"
 PORT = 8080  #change this to your port
 
-def input_trigger(): #triggers user input         		
-	start_server_tigger()
+def input_trigger(): #triggers user input         
+		
+	print("Paste full 'Codec 8' packet to parse it or:")
+	print("Type SERVER to start the server or:")
+	print("Type EXIT to stop the program")
+	device_imei = "default_IMEI"
+	user_input = "SERVER"
+	if user_input.upper() == "EXIT":
+		print(f"exiting program............")
+		exit()	
+
+	elif user_input.upper() == "SERVER":
+		start_server_tigger()
+	else:		
+		try:
+			if codec_8e_checker(user_input.replace(" ","")) == False:
+				print("Wrong input or invalid Codec8 packet")
+				print()
+				input_trigger()
+			else:
+				codec_parser_trigger(user_input, device_imei, "USER")
+		except Exception as e:
+			print(f"error occured: {e} enter proper Codec8 packet or EXIT!!!")
+			input_trigger()		
 
 ####################################################
 ###############__CRC16/ARC Checker__################
@@ -84,6 +106,7 @@ def start_server_tigger():
 			s.listen()
 			print(f"// {time_stamper()} // listening port: {PORT} // IP: {HOST}")
 			conn, addr = s.accept()
+			conn.settimeout(20) #connection timeout, change this value to close the socket if no DATA is received for X amount of seconds
 			with conn:
 				print(f"// {time_stamper()} // Connected by {addr}")
 				device_imei = "default_IMEI"
